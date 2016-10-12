@@ -1,0 +1,31 @@
+# This will be translated later
+
+1. Módulo da Impressora
+	O módulo da impressora será um módulo complementar ao módulo do usuário que terá como objetivo a impressão da senha requisitada pelo usuário. Este módulo será composto de uma impressora térmica e um PIC que será responsável pelo controle da impressora e pela comunicação com os demais módulos. Os usuários não terão um contato direto com este módulo, uma vez que a impressão será realizada apenas via requisição no Módulo do Usuário. 
+
+2. Comunicação
+O Módulo da Impressora será controlado por um PIC, que implementa o protocolo I2C. Este protocolo será utilizado para possibilitar a comunicação entre o PIC do Módulo da Impressora (como slave) e o PIC do Módulo do Usuário (como master).
+Além disso, a comunicação entre o PIC e a impressora térmica será feita utilizando TTL.
+
+3. Dados de Entrada
+O PIC deverá receber o código a ser impresso pela impressora via I2C, enviado pelo PIC do Módulo de Usuário. Estará incluído neste código o tamanho do mesmo (em bytes).
+O Módulo do Usuário será responsável pelo envio dos dados da seguinte forma: o primeiro byte será o tamanho da sequência de dados, seguido dos bytes referentes a senha gerada também pelo Módulo do Usuário. 
+Ao final do envio da sequência completa, o Módulo da Impressora será responsável pela impressão da senha para o usuário.
+
+4. Dados de Saída
+Mensagem de alerta para o módulo do usuário avisando que a impressão foi feita.
+Ligar um LED verde caso a impressora esteja funcionando corretamente.
+Ligar um LED vermelho caso a impressora esteja com algum problema (falta de papel, travamento, etc).
+Mensagem de alerta para o Módulo do Usuário, avisando que a impressora está defeituosa, a fim de travar o mesmo e impedir a geração de novas senhas.
+Mensagem de alerta para o Módulo do Usuário, avisando que a impressora voltou a funcionar, habilitando novamente o Módulo do Usuário e a geração de novas senhas.
+
+
+Materiais usados e orçamento
+
+Impressora Térmica CSN A2 - R$ 197,00 [1]
+Fonte p/ Conexão do cabo de Alimentação 5V-9V ou 12V, 1,5A de alimentação 
+Bobinas de Papel 57-58 milímetros, diâmetro máximo 39mm - R$ 10,00
+Estrutura que vai conter o módulo do usuário e a impressora 
+Ligação entre o módulo do usuário e a impressora 
+[1] http://www.projetoarduino.com.br/impressora-termica
+[2] https://cdn-shop.adafruit.com/datasheets/CSN-A2+User+Manual.pdf - Manual do usuário da impressora
