@@ -4,8 +4,8 @@
  Based on code by Nathan Seidle of Spark Fun Electronics 2011
  */
 #include <SoftwareSerial.h>
-SoftwareSerial Thermal(2, 3);
-int zero=0;
+SoftwareSerial Thermal(2, 3); // Configures serial port and creates an instance for writing
+int zero=0; // Defines variables to setup printing
 int heatTime = 100;
 int heatInterval = 80;
 char printDensity = 15; 
@@ -15,7 +15,7 @@ void setup()
 {
  Serial.begin(57600); // for debug info to serial monitor
  Thermal.begin(19200); // to write to our new printer
- initPrinter();
+ initPrinter(); // Set variables for the printer to work
 }
 void initPrinter()
 {
