@@ -26,18 +26,17 @@
 #include <xc.h>
 #define _XTAL_FREQ 8000000
 
-int zero=0; // Defines variables to setup printing
+int zero = 0; // Defines variables to setup printing
 int heatTime = 100;
 int heatInterval = 80;
 char printDensity = 15; 
 char printBreakTime = 15;
 
-void USART_start(void)
-{
+void USART_start(void) {
     // p154 Asynchronous Transmission Set-up
-    // 1 -  SPBRGH, SPBRG register pa SPBRGH, SPBRG register pair
-    SPBRGH = 0;
-    SPBRG = 2; 
+    // 1 -  SPBRGH SPBRG register pair
+    SPBRGH = 1;
+    SPBRG = 12; 
     
     // 2 - Set SPEN bit and clear SYNC for asynchronous operation
     TXSTAbits.SYNC = 0;
@@ -60,20 +59,17 @@ void USART_start(void)
     // 7 - Load 8-bit data into TXREG to transmit 
 }   
 
-void USART_char(unsigned char c)
-{
+void USART_char(unsigned char c) {
     while(!PIR1bits.TXIF);    // wait until transmit shift register is empty
         TXREG = c;               // write character to TXREG and start transmission
 }
 
-void USART_int(unsigned int i)
-{
+void USART_int(unsigned int i) {
     while(!PIR1bits.TXIF);
         TXREG = i;
 }
 
-void USART_string(unsigned char *s)
-{
+void USART_string(unsigned char *s) {
     while (*s)
     {
         USART_char(*s);     // send character pointed to by s
@@ -81,8 +77,7 @@ void USART_string(unsigned char *s)
     }
 }
 
-void PRINTER_init()
-{
+void PRINTER_start() {
     //Modify the print speed and heat
     USART_int(27);
     USART_int(55);
@@ -96,7 +91,7 @@ void PRINTER_init()
     USART_int(zero); //Combination of printDensity and printBreakTime
 }
 
-void loop() {
+void USART_password() {
     // Centering text
     USART_int(27);
     USART_int(97);
@@ -151,20 +146,19 @@ void loop() {
     while (1>0); // do nothing
 }
 
-void main()
-{
+void main() {
    USART_start();
    
-   //PRINTER_init();
+   //PRINTER_start();
    
-   //loop();
+   //USART_password();
    
    // TODO ask printer about its status
    // 27 118 2: paper status
     
     while(1){
         USART_int(10);
-        __delay_ms(0.05);
+        //__delay_ms(0.05);
     }
     
     return;
