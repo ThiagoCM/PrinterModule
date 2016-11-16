@@ -30,6 +30,7 @@ void USART_init(void)
 {
     // p154 Asynchronous Transmission Set-up
     // 1 -  SPBRGH, SPBRG register pa SPBRGH, SPBRG register pair
+    // Set BRGH to 1 so we have a fixed value for SPBRG using 4MHz on the oscillator.
     TXSTAbits.BRGH = 1;
     SPBRGH = 0;
     SPBRG = 12; 
@@ -63,7 +64,7 @@ void USART_putc(unsigned char c)
     
 }
 
-void USART_int (int i) //CANCELA
+void USART_int (int i) //Not using
 {
     while(!PIR1bits.TXIF);
         TXREG = i;
@@ -76,8 +77,9 @@ void USART_puts(unsigned char *s)
         USART_putc(s[i]);
     
 }
-
-void PRINTER_init(){
+// We're not using the init. For some reason, the printer is working fine with the PIC without using any pre-settable parameters.
+// On the beginning we're printing some trash, try to fix that using this function
+//void PRINTER_init(){
     
 //    USART_putc(27);
 //    USART_putc(55);
@@ -93,10 +95,6 @@ void PRINTER_init(){
 
 void main()
 {
-    TRISC = 0x00;
-    RC0 = 0;
-    RC1 = 0;
-    RC2 = 0;
     USART_init();
     //PRINTER_init();
     
@@ -152,7 +150,8 @@ void main()
     USART_putc(10);   // Print LF
     USART_putc(10);   // Print LF
 
-   // do { } while (1>0); // do nothing
+// For some reason, everytime we use a while the printer stop working. TODO: Check why this is happening 
+  // do { } while (1>0); // do nothing
     
 //    int flag = 0;
 //    while(1){
