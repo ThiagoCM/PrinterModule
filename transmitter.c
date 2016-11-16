@@ -24,7 +24,7 @@
 
 #include <stdio.h>
 #include <xc.h>
-#define _XTAL_FREQ 8000000
+#define _XTAL_FREQ 4000000
 
 void USART_init(void)
 {
