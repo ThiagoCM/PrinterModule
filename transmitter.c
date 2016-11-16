@@ -61,7 +61,6 @@ void USART_putc(unsigned char c)
 {
     while (!PIR1bits.TXIF );    // wait until transmit shift register is empty
         TXREG = c;               // write character to TXREG and start transmission
-    
 }
 
 void USART_int (int i) //Not using
@@ -75,12 +74,11 @@ void USART_puts(unsigned char *s)
     int i;
     for(i=0;s[i]!='\0';i++)
         USART_putc(s[i]);
-    
 }
 // We're not using the init. For some reason, the printer is working fine with the PIC without using any pre-settable parameters.
 // On the beginning we're printing some trash, try to fix that using this function
-//void PRINTER_init(){
-    
+void PRINTER_init(){
+//    
 //    USART_putc(27);
 //    USART_putc(55);
 //    USART_putc(7);
@@ -90,86 +88,101 @@ void USART_puts(unsigned char *s)
 //    USART_putc(18);
 //    USART_putc(35);
 //    USART_putc(0);
-//    
+//    //
+    USART_putc(27);
+    USART_putc(64); // Initialize the printer (the print buffer is cleared, etc)
+    __delay_ms(1500);
 }
+
+    
 
 void main()
 {
-    USART_init();
-    //PRINTER_init();
+    TRISC0 = 0;
+    TRISC1 = 0;
+    TRISC2 = 0;
     
-    // Centering text
-    USART_putc(27);
-    USART_putc(97);
-    USART_putc(1);
+    USART_init();
+    PRINTER_init();
+    
+    int flag = 0;
+    int counter = 0;
+    while(1)
+    {
+        
+        if (flag == 1) 
+        {
+         //   RC0 = 1;
+            while(1);
+        }
+        else 
+        {
+        //    RC1 = 1;
+            // Centering text
+            USART_putc(27);
+            USART_putc(97);
+            USART_putc(1);
+            // Double width and double height
+            USART_putc(29); 
+            USART_putc(33);
+            USART_putc(161);
+            USART_puts("IC-UFAL"); 
+            USART_putc(10);   // Print LF
+            __delay_ms(100);
 
-    // Double width and double height
-    USART_putc(29); 
-    USART_putc(33);
-    USART_putc(161);
-    USART_puts("IC-UFAL"); 
-    USART_putc(10);   // Print LF
-    __delay_ms(100);
+            char pswrd[] = "{1} 0003";
+            // Regular width and regular height
+            USART_putc(29); 
+            USART_putc(33);
+            USART_putc(0);
+            // Centering text
+            USART_putc(27);
+            USART_putc(97);
+            USART_putc(1);
+            USART_puts("Sua senha:");
+            USART_putc(10);   // Print LF
+            __delay_ms(100);
 
-    char pswrd[] = "P0003";
-    // Regular width and regular height
-    USART_putc(29); 
-    USART_putc(33);
-    USART_putc(0);
-    // Centering text
-    USART_putc(27);
-    USART_putc(97);
-    USART_putc(1);
-    USART_puts("Sua senha:");
-    __delay_ms(100);
+            // Centering text
+            USART_putc(27);
+            USART_putc(97);
+            USART_putc(1);
+            USART_puts("----------");
+            USART_putc(10);   // Print LF
+            __delay_ms(100);
 
-    // Centering text
-    USART_putc(27);
-    USART_putc(97);
-    USART_putc(1);
-    USART_puts("----------");
-    __delay_ms(100);
+            // Double width and double height
+            USART_putc(29); 
+            USART_putc(33);
+            USART_putc(161);
+            // Centering text
+            USART_putc(27);
+            USART_putc(97);
+            USART_putc(1);
+            USART_puts(pswrd);
+            USART_putc(10);   // Print LF
+            __delay_ms(100);
 
-    // Centering text
-    USART_putc(27);
-    USART_putc(97);
-    USART_putc(1);
-    // Double width and double height
-    USART_putc(29); 
-    USART_putc(33);
-    USART_putc(161);
-    USART_puts(pswrd);
-    __delay_ms(100);
+            // Regular width and regular height
+            USART_putc(29); 
+            USART_putc(33);
+            USART_putc(0);
+            // Centering text
+            USART_putc(27);
+            USART_putc(97);
+            USART_putc(1);
+            USART_puts("----------");
+            __delay_ms(100);
+            USART_putc(10);   // Print LF
+            USART_putc(10);   // Print LF
 
-    // Centering text
-    USART_putc(27);
-    USART_putc(97);
-    USART_putc(1);
-    USART_puts("----------");
-    __delay_ms(100);
-    USART_putc(10);   // Print LF
-    USART_putc(10);   // Print LF
+            flag = 1;
+            counter++;
+        }
+    }
 
 // For some reason, everytime we use a while the printer stop working. TODO: Check why this is happening 
   // do { } while (1>0); // do nothing
     
-//    int flag = 0;
-//    while(1){
-//      RC0 = !RC0;
-//      if(flag == 0) {
-//        char str[] = "SUA SENHA EH 2016 SIM";
-//
-//        USART_puts(str); 
-//        RC2 = !RC2;
-//        USART_putc(10);
-//        __delay_ms(100);
-//        flag = 1;
-//      }
-//      
-//      else {
-//          RC1 = !RC1;
-//      }
-//    }
-    
-    return;
+   // return;
 }
