@@ -26,16 +26,12 @@
 #include <xc.h>
 #define _XTAL_FREQ 8000000
 
-int zero = 0; // Defines variables to setup printing
-int heatTime = 100;
-int heatInterval = 80;
-char printDensity = 15; 
-char printBreakTime = 15;
-
-void USART_start(void) {
+void USART_init(void)
+{
     // p154 Asynchronous Transmission Set-up
-    // 1 -  SPBRGH SPBRG register pair
-    SPBRGH = 1;
+    // 1 -  SPBRGH, SPBRG register pa SPBRGH, SPBRG register pair
+    TXSTAbits.BRGH = 1;
+    SPBRGH = 0;
     SPBRG = 12; 
     
     // 2 - Set SPEN bit and clear SYNC for asynchronous operation
@@ -49,117 +45,132 @@ void USART_start(void) {
     TXSTAbits.TXEN = 1;
     
     // 5 - Enable interruptions
-    PIE1bits.TXIE = 1;      
-    INTCONbits.GIE = 1;
-    INTCONbits.PEIE = 1;
+    PIE1bits.TXIE = 0;      
+    INTCONbits.GIE = 0;
+    INTCONbits.PEIE = 0;
     
     // 6 - Clear RCIF
     PIR1bits.RCIF = 0;
+
     
     // 7 - Load 8-bit data into TXREG to transmit 
 }   
 
-void USART_char(unsigned char c) {
-    while(!PIR1bits.TXIF);    // wait until transmit shift register is empty
+void USART_putc(unsigned char c)
+{
+    while (!PIR1bits.TXIF );    // wait until transmit shift register is empty
         TXREG = c;               // write character to TXREG and start transmission
+    
 }
 
-void USART_int(unsigned int i) {
+void USART_int (int i) //CANCELA
+{
     while(!PIR1bits.TXIF);
         TXREG = i;
 }
 
-void USART_string(unsigned char *s) {
-    while (*s)
-    {
-        USART_char(*s);     // send character pointed to by s
-        s++;                // increase pointer location to the next character
-    }
-}
-
-void PRINTER_start() {
-    //Modify the print speed and heat
-    USART_int(27);
-    USART_int(55);
-    USART_int(7); //Default 64 dots = 8*('7'+1)
-    USART_int(heatTime); //Default 80 or 800us
-    USART_int(heatInterval); //Default 2 or 20us
-    //Modify the print density and timeout
-    USART_int(18);
-    USART_int(35);
-    // int printSetting = (printDensity<<4) | printBreakTime;
-    USART_int(zero); //Combination of printDensity and printBreakTime
-}
-
-void USART_password() {
-    // Centering text
-    USART_int(27);
-    USART_int(97);
-    USART_int(1);
-
-    // Double width and double height
-    USART_int(29); 
-    USART_int(33);
-    USART_int(161);
-    USART_string("IC-UFAL"); 
-    USART_int(10);   // Print LF
-    __delay_ms(1500);
-
-    // Centering text
-    USART_int(27);
-    USART_int(97);
-    USART_int(1);
-    // Regular width and regular height
-    USART_int(29); 
-    USART_int(33);
-    USART_int(zero);
-    USART_string("Sua senha:");
-    __delay_ms(1500);
-
-    // Centering text
-    USART_int(27);
-    USART_int(97);
-    USART_int(1);
-    USART_string("----------");
-    __delay_ms(1500);
-
-    // Centering text
-    USART_int(27);
-    USART_int(97);
-    USART_int(1);
-    // Double width and double height
-    USART_int(29); 
-    USART_int(33);
-    USART_int(161);
-    USART_string("P0003");
-    __delay_ms(1500);
-
-    // Centering text
-    USART_int(27);
-    USART_int(97);
-    USART_int(1);
-    USART_string("----------");
-    __delay_ms(1500);
-    USART_int(10);   // Print LF
-    USART_int(10);   // Print LF
- 
-    while (1>0); // do nothing
-}
-
-void main() {
-   USART_start();
-   
-   //PRINTER_start();
-   
-   //USART_password();
-   
-   // TODO ask printer about its status
-   // 27 118 2: paper status
+void USART_puts(unsigned char *s)
+{
+    int i;
+    for(i=0;s[i]!='\0';i++)
+        USART_putc(s[i]);
     
-    while(1){
-        USART_int(10);
-        //__delay_ms(0.05);
-    }
+}
+
+void PRINTER_init(){
+    
+//    USART_putc(27);
+//    USART_putc(55);
+//    USART_putc(7);
+//    USART_putc(100);
+//    USART_putc(80);
+//    //
+//    USART_putc(18);
+//    USART_putc(35);
+//    USART_putc(0);
+//    
+}
+
+void main()
+{
+    TRISC = 0x00;
+    RC0 = 0;
+    RC1 = 0;
+    RC2 = 0;
+    USART_init();
+    //PRINTER_init();
+    
+    // Centering text
+    USART_putc(27);
+    USART_putc(97);
+    USART_putc(1);
+
+    // Double width and double height
+    USART_putc(29); 
+    USART_putc(33);
+    USART_putc(161);
+    USART_puts("IC-UFAL"); 
+    USART_putc(10);   // Print LF
+    __delay_ms(100);
+
+    char pswrd[] = "P0003";
+    // Regular width and regular height
+    USART_putc(29); 
+    USART_putc(33);
+    USART_putc(0);
+    // Centering text
+    USART_putc(27);
+    USART_putc(97);
+    USART_putc(1);
+    USART_puts("Sua senha:");
+    __delay_ms(100);
+
+    // Centering text
+    USART_putc(27);
+    USART_putc(97);
+    USART_putc(1);
+    USART_puts("----------");
+    __delay_ms(100);
+
+    // Centering text
+    USART_putc(27);
+    USART_putc(97);
+    USART_putc(1);
+    // Double width and double height
+    USART_putc(29); 
+    USART_putc(33);
+    USART_putc(161);
+    USART_puts(pswrd);
+    __delay_ms(100);
+
+    // Centering text
+    USART_putc(27);
+    USART_putc(97);
+    USART_putc(1);
+    USART_puts("----------");
+    __delay_ms(100);
+    USART_putc(10);   // Print LF
+    USART_putc(10);   // Print LF
+
+   // do { } while (1>0); // do nothing
+    
+//    int flag = 0;
+//    while(1){
+//      RC0 = !RC0;
+//      if(flag == 0) {
+//        char str[] = "SUA SENHA EH 2016 SIM";
+//
+//        USART_puts(str); 
+//        RC2 = !RC2;
+//        USART_putc(10);
+//        __delay_ms(100);
+//        flag = 1;
+//      }
+//      
+//      else {
+//          RC1 = !RC1;
+//      }
+//    }
     
     return;
 }
