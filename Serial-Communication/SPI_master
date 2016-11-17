@@ -1,4 +1,5 @@
 #include <xc.h>
+
 // CONFIG1
 #pragma config FOSC = INTRC_NOCLKOUT// Oscillator Selection bits (INTOSCIO oscillator: I/O function on RA6/OSC2/CLKOUT pin, I/O function on RA7/OSC1/CLKIN)
 #pragma config WDTE = OFF       // Watchdog Timer Enable bit (WDT disabled and can be enabled by SWDTEN bit of the WDTCON register)
@@ -31,13 +32,18 @@ void IO_setup() {
                                 // SS pin has to be physically pulled high by a resistor
 }
 
-void SPI_setup() {
-    SSPCONbits.SSPEN = 0;   
+void SPI_setup_master() { 
 
-    SSPSTAT = 0b01000000;       // SMP, CKE.
-    SSPCON = 0b00110010;        // SSPEN, SKP and SSPM3-0(SPI Master mode, clock = FOSC/4).
+    SSPSTAT = 0b10000000;       // SMP, CKE.
+//    SSPSTATbits.SMP = 1;        // Bit 7.
+//    SSPSTATbits.CKE = 0;        // Bit 6.
+    SSPCON = 0b00100001;        // SSPEN, SKP and SSPM3-0(SPI Master mode, clock = FOSC/4).
+//    SSPCONbits.WCOL     = 0;    // Bit 7.
+//    SSPCONbits.SSPOV    = 0;    // Bit 6.
+//    SSPCONbits.SSPEN    = 1;    // Bit 5.
+//    SSPCONbits.CKP      = 0;    // Bit 4.
+//   SSPCONbits.SSPM     = 0001; // Bit 3 - 0 (SPI Master mode, clock = FOSC/4).
     PIR1bits.SSPIF = 0;         // Clear flag of SSP interruption
-    SSPCONbits.SSPEN = 1;
 
 }  
 
@@ -53,28 +59,39 @@ unsigned char z;
 }
 
 void SPI_send(unsigned char data){
+    SSPCONbits.CKP = 0;
     SSPSTATbits.BF = 0;
     SSPBUF = data;              // Load SSPBUF with the transmitting data.
-    while(!SSPSTATbits.BF);     // Wait for Buffer to be full.
+    while(SSPSTATbits.BF);     // Wait for Buffer to be full.
 }
 
+void SPI_wait(){
+    while(PIR1bits.SSPIF == 0);
+}
+
+
 void SPI_enable_interruptions(){
-    PIE1bits.SSPIE =1;          // Enable Master Synchronous Serial Port (MSSP) interruptions 
+    PIE1bits.SSPIE = 1;          // Enable Master Synchronous Serial Port (MSSP) interruptions 
     INTCONbits.PEIE = 1;        // Enable peripheral interruptions
     PIR1bits.SSPIF = 0;         // Clean MSSP Interrupt Flag bit
 }
 
 void main() {
-
-    unsigned char data = 255;
-
-    SPI_enable_interruptions();
-    
+    //SCK signal must be set to low
+    unsigned char * data;
+    unsigned char a = 'a';
+    data = a;
     IO_setup();
-            
-    SPI_setup();
-    
-    while(1){
-        SPI_send(data);
-    }
+    SPI_setup_master();
+    __delay_ms(3000);
+    SPI_send(data);
+//    while(1){
+//        data = data ^ 0x01;
+//        SPI_send(data);
+//        SPI_wait();
+//        __delay_ms(100);
+//        data = 0x00;
+//        SPI_send(data);
+//        SPI_wait();
+//    }
 }
