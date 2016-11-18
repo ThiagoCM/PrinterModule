@@ -1,3 +1,10 @@
+/*
+ * File:   main.c
+ * Author: Thiago, Carol, Tellicio, Isadora
+ *
+ * Created on 2 de Novembro de 2016, 16:24
+ */
+
 // SETUP
 
 #pragma config FOSC = INTRC_CLKOUT// Oscillator Selection bits (INTOSC oscillator: CLKOUT function on RA6/OSC2/CLKOUT pin, I/O function on RA7/OSC1/CLKIN)
