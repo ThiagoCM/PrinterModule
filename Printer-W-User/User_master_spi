@@ -114,10 +114,10 @@ void SPI_sendString(){
     }
 }
 //-------------------SERIAL and WIFI---------------------------------
-
-void sendToAttendant(char n){
-    //TODO
-}
+//
+//void sendToAttendant(char n){
+//    //TODO
+//}
 
 //-------------------BUTTONS FUNCTIONS-------------------------------
 
@@ -161,6 +161,7 @@ void CashierPriorityButton(){
     
     pcqueue[pclast] = pcCount;
     pclast = pclast + 1;
+    SPI_send('a');
 }
 void CashierNormalButton(){
     //ver se a fila esta cheia
@@ -182,7 +183,7 @@ void CashierNormalButton(){
     
     cqueue[clast] = mCount;
     clast = clast + 1;
-    SPI_sendString();
+    SPI_send('a');
 }
 
 void ManagerNormalButton(){
@@ -206,7 +207,6 @@ void ManagerNormalButton(){
     mqueue[mlast] = mCount;
     mlast = mlast + 1;
     SPI_send('A');
-    __delay_ms(500);
 }
 void ManagerPriorityButton(){
     //ver se a fila esta cheia
@@ -228,7 +228,7 @@ void ManagerPriorityButton(){
     
     pmqueue[pmlast] = pmCount;
     pmlast = pmlast + 1;
-    //sendToPrinter();
+    SPI_send('a');
 }
 void interrupt buttonINT(){
     
@@ -254,6 +254,7 @@ void interrupt buttonINT(){
             
         } else if(!PORTBbits.RB3){
             getNextManager();
+            SPI_send('c');
             //ManagerPriorityButton();
             PORTAbits.RA4 = 0x01;
             __delay_ms(500);
@@ -264,120 +265,30 @@ void interrupt buttonINT(){
         }
         else if(!PORTBbits.RB1){
             //CashierPriorityButton();
+            SPI_send('b');
         }
     }
     
     INTCONbits.RBIF = 0x00;
 }
-//
-//void overflow(){
-//                RCSTAbits.CREN = 0x00;
-//                RCSTAbits.CREN = 0x01;
-//}
 
-//void tx_serial(unsigned char aChar){
-//    while(!PIR1bits.TXIF) { }
-//    TXREG = aChar;
-//}
-//
-//void rx_serial(){
-//                
-//    do {
-//        if(RCSTAbits.OERR){
-//            overflow();
-//        }
-//    } while (!PIR1bits.RCIF);
-//}
-//
-//void new_at_com() {
-//    tx_serial('A');
-//    tx_serial('T');
-//    tx_serial('+');
-//}
-//
-//void wait_ok () {
-//    while (1) {
-//        rx_serial();
-//        if (RCREG != 'O') {
-//            continue;
-//        }
-//        rx_serial();
-//        if (RCREG != 'K') {
-//            continue;
-//        }
-//        rx_serial();
-//        if (RCREG == 0xD) {
-//            break;
-//        }
-//    }
-//} 
-//
-//void connect_wifi() {
-////    CWMODE=1
-//    new_at_com();
-//    tx_serial('C');
-//    tx_serial('W');
-//    tx_serial('M');
-//    tx_serial('O');
-//    tx_serial('D');
-//    tx_serial('E');
-//    tx_serial('=');
-//    tx_serial('1');
-//    tx_serial(0xD);
-//    tx_serial(0xA);
-//    wait_ok();
-////    CWJAP_CUR="dlink",""
-//    new_at_com();
-//    tx_serial('C');
-//    tx_serial('W');
-//    tx_serial('J');
-//    tx_serial('A');
-//    tx_serial('P');
-//    tx_serial('_');
-//    tx_serial('C');
-//    tx_serial('U');
-//    tx_serial('R');
-//    tx_serial('=');
-//    tx_serial('"');
-//    tx_serial('d');
-//    tx_serial('l');
-//    tx_serial('i');
-//    tx_serial('n');
-//    tx_serial('k');
-//    tx_serial('"');
-//    tx_serial(',');
-//    tx_serial('"');
-//    tx_serial('"');
-//    tx_serial(0xD);
-//    tx_serial(0xA);
-//    wait_ok();
-////    CPMUX=1
-//    tx_serial('C');
-//    tx_serial('P');
-//    tx_serial('M');
-//    tx_serial('U');
-//    tx_serial('X');
-//    tx_serial('=');
-//    tx_serial('1');
-//    tx_serial(0xD);
-//    tx_serial(0xA);
-//    wait_ok();
-//}
-//
-//void usartInit(){
-//    SPBRG = 0xC;
-//    PIR1bits.RCIF = 0x00;
-//    RCSTAbits.SPEN = 0x01;
-//    RCSTAbits.CREN = 0x01;
-//    TXSTAbits.SYNC = 0x00;
-//    TXSTAbits.TXEN = 0x01;
-//}
 void main(void) {
     nRBPU = 0;      //Enable PORTB internal pull up resistor
     
-    ANSEL = 0x00;
-    PORTA = 0x00;
-    TRISA = 0x00;   //PORTA as output
+    ANSELbits.ANS0 = 0x00;
+    ANSELbits.ANS1 = 0x00;
+    ANSELbits.ANS2 = 0x00;
+    ANSELbits.ANS4 = 0x00;
+    
+    TRISAbits.TRISA0 = 0x00;   //PORTA as output
+    TRISAbits.TRISA1 = 0x00;
+    TRISAbits.TRISA2 = 0x00;
+    TRISAbits.TRISA4 = 0x00;
+    
+    PORTAbits.RA0 = 0x00;
+    PORTAbits.RA1 = 0x00;
+    PORTAbits.RA2 = 0x00;
+    PORTAbits.RA4 = 0x00;
     
     PORTC = 0x00;
     TRISC7 = 1; //Setting as input as given in datasheet
@@ -420,17 +331,10 @@ void main(void) {
        //All LEDs OFF
     
     __delay_ms(250);    
-    // isso aqui a carol colocou pra ficar igual ao master que deu certo
+    
     IO_setup();
     SPI_setup_master();
-    
-    unsigned char * data;
-    unsigned char a = 'a';
-    
-    data = a;
-    __delay_ms(3000);
-    SPI_send(data);
-            
+               
     while(1)
     {
     }
