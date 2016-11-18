@@ -1,3 +1,5 @@
+// SETUP
+
 #pragma config FOSC = INTRC_CLKOUT// Oscillator Selection bits (INTOSC oscillator: CLKOUT function on RA6/OSC2/CLKOUT pin, I/O function on RA7/OSC1/CLKIN)
 #pragma config WDTE = OFF       // Watchdog Timer Enable bit (WDT disabled and can be enabled by SWDTEN bit of the WDTCON register)
 #pragma config PWRTE = OFF      // Power-up Timer Enable bit (PWRT disabled)
@@ -8,26 +10,25 @@
 #pragma config IESO = OFF       // Internal External Switchover bit (Internal/External Switchover mode is disabled)
 #pragma config FCMEN = OFF      // Fail-Safe Clock Monitor Enabled bit (Fail-Safe Clock Monitor is disabled)
 #pragma config LVP = OFF        // Low Voltage Programming Enable bit (RB3 pin has digital I/O, HV on MCLR must be used for programming)
-
-// CONFIG2
 #pragma config BOR4V = BOR40V   // Brown-out Reset Selection bit (Brown-out Reset set to 4.0V)
 #pragma config WRT = OFF        // Flash Program Memory Self Write Enable bits (Write protection off)
-
 // #pragma config statements should precede project file includes.
 // Use project enums instead of #define for ON and OFF.
 
-
+// Libraries and PIC frequency
 #include <stdio.h>
 #include <xc.h>
 #define _XTAL_FREQ 4000000
 
+// Defining clock, input and output
 #define SCK RC3
 #define SDI RC4
 #define SDO RC5
 
+// Defining a global variable
 unsigned char z = 'b';
 
-// ========================= SPI_SLAVE
+// ========================= SPI_SLAVE SETUP =========================
 
 
 void IO_setup() {
@@ -67,7 +68,7 @@ void SPI_enable_interruptions(){
     INTCONbits.GIE = 1;         // Enable Global interruptions
 }
 
-// ======================== PRINT STUFF
+// ======================== USART ========================
 
 
 void USART_init(void)
@@ -107,26 +108,24 @@ void USART_putc(unsigned char c)
         TXREG = c;               // write character to TXREG and start transmission
 }
 
-void USART_int (int i) //Not using
-{
-    while(!PIR1bits.TXIF);
-        TXREG = i;
-}
-
 void USART_puts(unsigned char *s)
 {
     int i;
     for(i=0;s[i]!='\0';i++)
         USART_putc(s[i]);
 }
-// We're not using the init. For some reason, the printer is working fine with the PIC without using any pre-settable parameters.
-// On the beginning we're printing some trash, try to fix that using this function
 
+// We're not setting up configurations for the printer. 
+// For some reason, the printer is working fine with the PIC without using any pre-settable parameters.
+// The PRINTER_init clears the printer buffer.
+
+
+// ======================== PRINTER ========================
 void PRINTER_init(){
     
     USART_putc(27);
     USART_putc(64); // Initialize the printer (the print buffer is cleared, etc)
-    __delay_ms(1500);
+    __delay_ms(1500); // Setting delay to be sure the printer has been set
 }
 
 void PRINTER_print(unsigned char *password) {
@@ -192,7 +191,7 @@ void PRINTER_print(unsigned char *password) {
 }
 
 
-// ================ MAIN
+// ================ MAIN ================
 void main() {
     
     USART_init();
@@ -204,17 +203,18 @@ void main() {
     while(1);
 }
 
+// Setting up interruption
+
 void interrupt slave_read()
 { 
     if(PIR1bits.SSPIF == 1)
     {
        SSPCONbits.CKP = 0;          // Clock Polarity Select bit, Idle state for clock is a low level
-       if ((SSPCONbits.SSPOV) || (SSPCONbits.WCOL))     
+       if ((SSPCONbits.SSPOV) || (SSPCONbits.WCOL))     // Checking collision and overwrite
         // If overflow (SSPOV): new byte is received while SSPBUF still holds the previous data
         //  or collision (WCOL): A write to SSPBUF was attempted while the SPI conditions were not valid 
         //                       for a transmission to be started
        {
-           
              z = SSPBUF;            // Read the previous value to clear the buffer
              SSPCONbits.SSPOV = 0;  // Clear the overflow flag
              SSPCONbits.WCOL = 0;   // Clear the collision bit
@@ -222,20 +222,15 @@ void interrupt slave_read()
        }
       if(SSPSTATbits.BF != 0)
       {
-         z = SPI_read();
-         PORTAbits.RA0 = z;
-        unsigned char * h;
-        if(z != 'b'){
-            h = z;
-            z = 'b';
+            z = SPI_read();
+            unsigned char * h;
+            if(z != 'b'){
+                h = z;
+                z = 'b';
             PRINTER_print(h);
+            }
       }
-       
        SSPIF = 0;                   // Clean Master Synchronous Serial Port (MSSP) Interrupt Flag bit
        __delay_ms(100);
-       
-        }
-       
     }
-//}
 }
